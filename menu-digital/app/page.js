@@ -16,6 +16,9 @@ export default function MenuPage() {
   const [isOpenNow, setIsOpenNow] = useState(false);
   const [isForcedClosed, setIsForcedClosed] = useState(false);
 
+  // Modal Aviso de Local Cerrado
+  const [showClosedModal, setShowClosedModal] = useState(false);
+
   // Desplegable Horarios
   const [isHoursOpen, setIsHoursOpen] = useState(false);
 
@@ -35,7 +38,8 @@ export default function MenuPage() {
   const [address, setAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Efectivo');
 
-  const PHONE_NUMBER = '5492234482398';
+  // NUEVO NÚMERO ACTUALIZADO
+  const PHONE_NUMBER = '542236819158';
 
   const schedule = [
     { day: 'Lunes', open1: '12:00', close1: '15:15', open2: '20:00', close2: '23:15' },
@@ -165,6 +169,12 @@ export default function MenuPage() {
   }, [products, selectedCategory]);
 
   const openProductModal = useCallback((product) => {
+    // Si el local está cerrado, advertir al usuario y bloquear selección
+    if (!isOpenNow) {
+      setShowClosedModal(true);
+      return;
+    }
+
     setSelectedProduct(product);
     setProductQuantity(1);
     setUnitsData([{ selectedAddons: [], flavorQuantities: {} }]);
@@ -173,7 +183,7 @@ export default function MenuPage() {
 
     const addons = productAddonsMap[product.id] || [];
     setAvailableAddons(addons);
-  }, [productAddonsMap]);
+  }, [productAddonsMap, isOpenNow]);
 
   const handleQuantityChange = useCallback((newQty) => {
     if (newQty < 1) return;
@@ -275,6 +285,11 @@ export default function MenuPage() {
   }, [selectedProduct, unitsData, productQuantity]);
 
   const handleConfirmAddToCart = () => {
+    if (!isOpenNow) {
+      setShowClosedModal(true);
+      return;
+    }
+
     if (!selectedProduct || !isAllUnitsValid()) return;
 
     const totalPrice = calculateTotalPrice();
@@ -335,6 +350,11 @@ export default function MenuPage() {
 
   const sendWhatsAppOrder = (e) => {
     e.preventDefault();
+    if (!isOpenNow) {
+      setShowClosedModal(true);
+      return;
+    }
+
     if (cart.length === 0 || !customerName) return;
 
     let text = `*NUEVO PEDIDO - IL CAPO*\n`;
@@ -395,7 +415,6 @@ export default function MenuPage() {
             Sandwichería
           </span>
 
-          {/* TITULO CON LOGO A LA IZQUIERDA Y AL MISMO TAMAÑO */}
           <div className="flex items-center justify-center gap-3">
             <img
               src="/logo.jpeg"
@@ -545,7 +564,11 @@ export default function MenuPage() {
                     </span>
                     <button
                       onClick={() => openProductModal(product)}
-                      className="bg-amber-400 hover:bg-amber-300 active:scale-95 text-black text-xs px-3.5 py-1.5 rounded-xl font-extrabold transition-all shadow-md shadow-amber-400/10 flex-shrink-0"
+                      className={`text-xs px-3.5 py-1.5 rounded-xl font-extrabold transition-all shadow-md flex-shrink-0 ${
+                        isOpenNow
+                          ? 'bg-amber-400 hover:bg-amber-300 active:scale-95 text-black shadow-amber-400/10'
+                          : 'bg-neutral-800 text-neutral-500 hover:bg-red-950/40 hover:text-red-400 border border-neutral-700/50'
+                      }`}
                     >
                       + Agregar
                     </button>
@@ -556,6 +579,31 @@ export default function MenuPage() {
           </div>
         )}
       </main>
+
+      {/* MODAL / CARTEL DE LOCAL CERRADO */}
+      {showClosedModal && (
+        <div className="fixed inset-0 bg-black/85 z-50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl space-y-4">
+            <div className="w-14 h-14 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+              🚫
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-white">Local Cerrado</h3>
+              <p className="text-xs text-neutral-400 mt-2 leading-relaxed">
+                {isForcedClosed
+                  ? 'Actualmente el local se encuentra cerrado temporalmente por feriado, vacaciones o reformas.'
+                  : 'En este momento no estamos tomando pedidos. Por favor consultá nuestros horarios de atención.'}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowClosedModal(false)}
+              className="w-full bg-amber-400 hover:bg-amber-300 text-black font-extrabold py-3 rounded-2xl text-xs transition-all shadow-lg shadow-amber-400/10"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE PERSONALIZACIÓN */}
       {selectedProduct && (
