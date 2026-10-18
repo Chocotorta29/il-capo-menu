@@ -11,6 +11,7 @@ export default function MenuPage() {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingMP, setLoadingMP] = useState(false);
 
   // Estado del local (Abierto / Cerrado)
   const [isOpenNow, setIsOpenNow] = useState(false);
@@ -398,6 +399,45 @@ export default function MenuPage() {
     const encodedText = encodeURIComponent(text);
     window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodedText}`, '_blank');
   };
+  const handleMercadoPagoCheckout = async (e) => {
+    e?.preventDefault();
+
+    if (cart.length === 0) {
+      alert('El carrito está vacío');
+      return;
+    }
+
+    setLoadingMP(true);
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cart,
+          customerName: 'Cliente Il Capo',
+          address: '',
+          orderType: 'delivery',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        alert('Ocurrió un error al generar el pago.');
+        setLoadingMP(false);
+      }
+    } catch (error) {
+      console.error('Error al conectar con Mercado Pago:', error);
+      alert('No se pudo procesar la solicitud.');
+      setLoadingMP(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-black text-neutral-100 pb-28 font-sans selection:bg-amber-400 selection:text-black">
@@ -970,6 +1010,18 @@ export default function MenuPage() {
               >
                 <span>Enviar Pedido por WhatsApp 📲</span>
               </button>
+              <button
+  type="button"
+  onClick={handleMercadoPagoCheckout}
+  disabled={loadingMP}
+  className="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 mt-3 text-sm"
+>
+  {loadingMP ? (
+    <span>Conectando con Mercado Pago...</span>
+  ) : (
+    <span>Pagar con Mercado Pago 💳</span>
+  )}
+</button>
             </form>
           </div>
         </div>
