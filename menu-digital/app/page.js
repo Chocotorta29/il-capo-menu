@@ -399,11 +399,16 @@ export default function MenuPage() {
     const encodedText = encodeURIComponent(text);
     window.open(`https://wa.me/${PHONE_NUMBER}?text=${encodedText}`, '_blank');
   };
-  const handleMercadoPagoCheckout = async (e) => {
+const handleMercadoPagoCheckout = async (e) => {
     e?.preventDefault();
 
     if (cart.length === 0) {
       alert('El carrito está vacío');
+      return;
+    }
+
+    if (!customerName.trim()) {
+      alert('Por favor ingresá tu nombre');
       return;
     }
 
@@ -417,9 +422,9 @@ export default function MenuPage() {
         },
         body: JSON.stringify({
           cart,
-          customerName: 'Cliente Il Capo',
-          address: '',
-          orderType: 'delivery',
+          customerName,
+          address: orderType === 'Delivery' ? address : 'Retiro en local',
+          orderType,
         }),
       });
 
@@ -953,7 +958,7 @@ export default function MenuPage() {
                 />
               </div>
 
-              <div className="flex gap-2">
+<div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setOrderType('Delivery')}
@@ -992,36 +997,43 @@ export default function MenuPage() {
                 </div>
               )}
 
-              <div>
-                <label className="text-xs font-semibold text-neutral-400 block mb-1">Forma de Pago</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full p-3 bg-neutral-950 border border-neutral-800 rounded-xl text-sm outline-none focus:border-amber-400 text-neutral-100"
-                >
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia / Mercado Pago">Transferencia / Mercado Pago</option>
-                </select>
-              </div>
+<div>
+  <label className="text-xs font-semibold text-neutral-400 block mb-1">Forma de Pago</label>
+  <select
+    value={paymentMethod}
+    onChange={(e) => setPaymentMethod(e.target.value)}
+    className="w-full p-3 bg-neutral-950 border border-neutral-800 rounded-xl text-sm outline-none focus:border-amber-400 text-neutral-100"
+  >
+    <option value="Efectivo">Efectivo</option>
+    <option value="Mercado Pago">Transferencia / Mercado Pago</option>
+  </select>
+</div>
 
-              <button
-                type="submit"
-                className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold py-3.5 rounded-2xl shadow-lg shadow-emerald-500/10 mt-4 text-sm flex items-center justify-center gap-2"
-              >
-                <span>Enviar Pedido por WhatsApp 📲</span>
-              </button>
-              <button
-  type="button"
-  onClick={handleMercadoPagoCheckout}
-  disabled={loadingMP}
-  className="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 mt-3 text-sm"
->
-  {loadingMP ? (
-    <span>Conectando con Mercado Pago...</span>
-  ) : (
-    <span>Pagar con Mercado Pago 💳</span>
-  )}
-</button>
+{/* Si elije Efectivo, muestra el botón de WhatsApp */}
+{paymentMethod === 'Efectivo' && (
+  <button
+    type="submit"
+    className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold py-3.5 rounded-2xl shadow-lg shadow-emerald-500/10 mt-4 text-sm flex items-center justify-center gap-2"
+  >
+    <span>Enviar Pedido por WhatsApp 📲</span>
+  </button>
+)}
+
+{/* Si elije Mercado Pago, muestra el botón de Checkout */}
+{paymentMethod === 'Mercado Pago' && (
+  <button
+    type="button"
+    onClick={handleMercadoPagoCheckout}
+    disabled={loadingMP}
+    className="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-50 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg transition duration-200 flex items-center justify-center gap-2 mt-4 text-sm"
+  >
+    {loadingMP ? (
+      <span>Conectando con Mercado Pago...</span>
+    ) : (
+      <span>Pagar con Mercado Pago 💳</span>
+    )}
+  </button>
+)}
             </form>
           </div>
         </div>
